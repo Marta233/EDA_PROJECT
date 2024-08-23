@@ -5,6 +5,8 @@ import plotly.graph_objs as go
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from scipy.stats import ttest_ind  # For statistical comparison
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class Visual:
     def __init__(self, df):
@@ -81,12 +83,38 @@ class Visual:
         for field in list_fields:
             fig = px.histogram(self.df, x=field, nbins=20, title=f'Histogram for {field}')
             fig.show()
+    def plot_histograms(self, variables):
+        
+        # Plot histograms
+        plt.figure(figsize=(14, 10))
+        for i, var in enumerate(variables, 1):
+            plt.subplot(3, 3, i)
+            sns.histplot(self.df[var], kde=True, color='skyblue', bins=30)
+            plt.title(f'{var} Histogram')
+            plt.xlabel(var)
+            plt.ylabel('Frequency')
+        plt.tight_layout()
 
-    def analyze_z_score(self, field):
-        mean = self.df[field].mean()
-        std_dev = self.df[field].std()
-        z_scores = (self.df[field] - mean) / std_dev
-        return z_scores
+    def outlier_count_z_score_all_fields(self, z_score_threshold=3):
+        outlier_counts = {}
+        for column in self.df.columns:
+            if self.df[column].dtype in ['int64', 'float64']:
+                z_scores = (self.df[column] - self.df[column].mean()) / self.df[column].std()
+                outlier_count = (abs(z_scores) > z_score_threshold).sum()
+                outlier_counts[column] = outlier_count
+
+        return outlier_counts
+
+    def outlier_count_iqr_all_fields(self):
+        outlier_counts = {}
+        for column in self.df.columns:
+            if self.df[column].dtype in ['int64', 'float64']:
+                q1 = self.df[column].quantile(0.25)
+                q3 = self.df[column].quantile(0.75)
+                iqr = q3 - q1
+                lower_bound = q1 - 1.5 * iqr
+                upper_bound = q3 + 1.5 * iqr
+                outlier_count = ((self.df[column] < lower_bound) | (self.df[column] > upper_bound)).sum()
 
     def bubble_chart(self, x, y, size_col, color_col, title='Bubble Chart'):
         """
