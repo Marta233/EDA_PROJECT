@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 from scipy.stats import ttest_ind  # For statistical comparison
 
-class Visualization1:
+class Trand_analysis:
     def __init__(self, df):
         self.df = df
 
