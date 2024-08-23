@@ -116,42 +116,25 @@ class Visual:
                 upper_bound = q3 + 1.5 * iqr
                 outlier_count = ((self.df[column] < lower_bound) | (self.df[column] > upper_bound)).sum()
 
-    def bubble_chart(self, x, y, size_col, color_col):
+    def create_bubble_chart(self, x_col, y_col, size_col, color_col):
         """
-        Create a bubble chart with Plotly.
-
-        Parameters:
-        - x (str): The column name for the x-axis.
-        - y (str): The column name for the y-axis.
-        - size_col (str): The column name for bubble size.
-        - color_col (str): The column name for bubble color.
-        - title (str): The title of the chart.
-
-        Returns:
-        - fig (plotly.graph_objects.Figure): The created bubble chart figure.
+        Create and show a bubble chart.
+        
+        :param x_col: Column name for the X-axis.
+        :param y_col: Column name for the Y-axis.
+        :param size_col: Column name for the bubble size.
+        :param color_col: Column name for the bubble color.
+        :param title: Title of the bubble chart.
         """
         fig = px.scatter(
             self.df,
-            x=x,
-            y=y,
-            size=size_col,
-            color=color_col,
-            hover_name=self.df.index,
-            labels={
-                x: x,
-                y: y,
-                size_col: size_col,
-                color_col: color_col
-            },
-            title='Bubble Chart'
-        )
-
-        # Update layout for better visual appeal
-        fig.update_layout(
-            legend_title=color_col,
-            coloraxis_colorbar_title=color_col,
-            xaxis_title=x,
-            yaxis_title=y
+            x=x_col,
+            y=y_col,
+            size=size_col,  # Bubble size represents the size column
+            color=color_col, # Bubble color represents the color column
+            hover_name=self.df.index, # Hover over the points
+            title="Bubble Chart of GHI vs Tamb vs WS",
+            labels={x_col: x_col, y_col: y_col, size_col: size_col, color_col: color_col}
         )
 
         # Show the plot
