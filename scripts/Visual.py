@@ -116,7 +116,7 @@ class Visual:
                 upper_bound = q3 + 1.5 * iqr
                 outlier_count = ((self.df[column] < lower_bound) | (self.df[column] > upper_bound)).sum()
 
-    def bubble_chart(self, x, y, size_col, color_col, title='Bubble Chart'):
+    def bubble_chart(self, x, y, size_col, color_col):
         """
         Create a bubble chart with Plotly.
 
@@ -143,7 +143,7 @@ class Visual:
                 size_col: size_col,
                 color_col: color_col
             },
-            title=title
+            title='Bubble Chart'
         )
 
         # Update layout for better visual appeal
@@ -156,4 +156,45 @@ class Visual:
 
         # Show the plot
         fig.show()
+    def analyze_temperature_rh_solar(self, temp_col, rh_col, solar_cols):
+        """
+        Analyze the relationship between temperature, relative humidity, and solar radiation.
+        """
+        # 1. Create a scatter plot of temperature vs. relative humidity
+        fig = px.scatter(self.df, x=temp_col, y=rh_col, 
+                        title="Temperature vs. Relative Humidity")
+        fig.show()
 
+        # 2. Compute the correlation coefficient between temperature and relative humidity
+        temp_rh_corr = self.df[temp_col].corr(self.df[rh_col])
+        print(f"Correlation between temperature and relative humidity: {temp_rh_corr:.2f}")
+
+        # 3. Create a 3D scatter plot for each solar radiation column
+        for solar_col in solar_cols:
+            fig = go.Figure(data=[go.Scatter3d(
+                x=self.df[temp_col],
+                y=self.df[rh_col],
+                z=self.df[solar_col],
+                mode='markers'
+            )])
+            fig.update_layout(
+                title=f'3D Scatter Plot of Temperature, Relative Humidity, and {solar_col}',
+                scene=dict(
+                    xaxis_title='Temperature',
+                    yaxis_title='Relative Humidity',
+                    zaxis_title=solar_col
+                )
+            )
+            fig.show()
+
+        # 4. Perform linear regression to model the relationship between temperature, 
+        #    relative humidity, and each solar radiation column
+        for solar_col in solar_cols:
+            X = self.df[[temp_col, rh_col]]
+            y = self.df[solar_col]
+            model = LinearRegression()
+            model.fit(X, y)
+            print(f"Regression coefficients for {solar_col}: "
+                  f"intercept={model.intercept_:.2f}, "
+                  f"temperature={model.coef_[0]:.2f}, "
+                  f"relative_humidity={model.coef_[1]:.2f}")
