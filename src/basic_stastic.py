@@ -35,17 +35,13 @@ class BasicStas:
 
         outliers = (self.df[column] < lower_bound) | (self.df[column] > upper_bound)
         return outliers
-
-    def check_duplicate_count(self):
-        return self.df.duplicated().sum()
-    def check_duplicate_remove(self):
-        self.df = self.df.drop_duplicates()
-        return self.df
     def check_data_type(self):
         return self.df.dtypes
-    def check_column_count(self):
-        return len(self.df.columns)
-    def check_row_count(self):
-        return len(self.df)
-    def check_column_names(self):
-        return list(self.df.columns)
+    def count_negative_value_for_fild(self):
+        negative_value_counts = {}
+        for attr, value in self.__dict__.items():
+            if isinstance(value, pd.DataFrame):
+             numeric_cols = value.select_dtypes(include=['int64', 'float64']).columns
+             negative_count = (value[numeric_cols] < 0).sum().to_dict()
+             negative_value_counts[attr] = negative_count
+        return negative_value_counts
