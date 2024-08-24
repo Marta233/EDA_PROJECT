@@ -10,27 +10,47 @@ import seaborn as sns
 
 class Visual:
     def __init__(self, df):
+        """
+        Initialize the Visual class with a DataFrame.
+        
+        :param df: Pandas DataFrame containing the data.
+        """
         self.df = df
 
     def plot_line_graph(self, x, y):
+        """
+        Plot a line graph for the given x and y columns.
+        
+        :param x: Column name for the x-axis.
+        :param y: Column name for the y-axis.
+        """
+        # Convert x to datetime if necessary
         self.df[x] = pd.to_datetime(self.df[x], format='mixed', dayfirst=True, errors='coerce')
         fig = px.line(self.df, x=x, y=y)
         fig.show()
 
     def evaluate_cleaning_impact(self, timestamp_col, cleaning_col, mod_cols):
+        """
+        Evaluate the impact of cleaning on sensor readings and perform statistical comparison.
+        
+        :param timestamp_col: Column name for the timestamp.
+        :param cleaning_col: Column name for cleaning status (0 or 1).
+        :param mod_cols: List of columns for which to evaluate the impact.
+        :return: Mean values by cleaning status and statistical test results.
+        """
         # Convert timestamp column to datetime if not already
         self.df[timestamp_col] = pd.to_datetime(self.df[timestamp_col])
 
-        # Group by Cleaning status and compute mean of ModA and ModB
+        # Group by cleaning status and compute mean of ModA and ModB
         mean_values = self.df.groupby(cleaning_col)[mod_cols].mean().reset_index()
         print(f"Mean values by {cleaning_col} status:\n", mean_values)
 
-        # Plotting the time series of ModA and ModB with cleaning events
+        # Plot time series of ModA and ModB with cleaning events
         fig = px.line(self.df, x=timestamp_col, y=mod_cols, color=cleaning_col,
                      title='Impact of Cleaning on Sensor Readings Over Time')
         fig.show()
 
-        # Statistical comparison
+        # Perform statistical comparison (t-test)
         ttest_results = {}
         for mod_col in mod_cols:
             cleaned = self.df[self.df[cleaning_col] == 1][mod_col]
@@ -43,6 +63,11 @@ class Visual:
         return mean_values, ttest_results
 
     def plot_correlation_heatmap(self, features):
+        """
+        Plot a heatmap of the correlation matrix for the given features.
+        
+        :param features: List of column names to include in the correlation matrix.
+        """
         corr_matrix = self.df[features].corr()
     
         fig = go.Figure(data=go.Heatmap(
@@ -65,6 +90,11 @@ class Visual:
         fig.show()
 
     def plot_scatter_matrix(self, features):
+        """
+        Plot a scatter matrix for the given features.
+        
+        :param features: List of column names to include in the scatter matrix.
+        """
         fig = px.scatter_matrix(
             self.df[features],
             dimensions=features,
@@ -80,12 +110,21 @@ class Visual:
         fig.show()
 
     def histogram_for_list_fields(self, list_fields):
+        """
+        Plot histograms for the given list of fields.
+        
+        :param list_fields: List of column names for which to plot histograms.
+        """
         for field in list_fields:
             fig = px.histogram(self.df, x=field, nbins=20, title=f'Histogram for {field}')
             fig.show()
+
     def plot_histograms(self, variables):
+        """
+        Plot histograms for the given list of variables using Matplotlib and Seaborn.
         
-        # Plot histograms
+        :param variables: List of column names for which to plot histograms.
+        """
         plt.figure(figsize=(14, 10))
         for i, var in enumerate(variables, 1):
             plt.subplot(3, 3, i)
@@ -94,8 +133,15 @@ class Visual:
             plt.xlabel(var)
             plt.ylabel('Frequency')
         plt.tight_layout()
+        plt.show()
 
     def outlier_count_z_score_all_fields(self, z_score_threshold=3):
+        """
+        Count outliers in all numeric fields using Z-score method.
+        
+        :param z_score_threshold: Z-score threshold for identifying outliers.
+        :return: Dictionary with column names as keys and outlier counts as values.
+        """
         outlier_counts = {}
         for column in self.df.columns:
             if self.df[column].dtype in ['int64', 'float64']:
@@ -106,6 +152,11 @@ class Visual:
         return outlier_counts
 
     def outlier_count_iqr_all_fields(self):
+        """
+        Count outliers in all numeric fields using IQR method.
+        
+        :return: Dictionary with column names as keys and outlier counts as values.
+        """
         outlier_counts = {}
         for column in self.df.columns:
             if self.df[column].dtype in ['int64', 'float64']:
@@ -115,6 +166,9 @@ class Visual:
                 lower_bound = q1 - 1.5 * iqr
                 upper_bound = q3 + 1.5 * iqr
                 outlier_count = ((self.df[column] < lower_bound) | (self.df[column] > upper_bound)).sum()
+                outlier_counts[column] = outlier_count
+
+        return outlier_counts
 
     def create_bubble_chart(self, x_col, y_col, size_col, color_col):
         """
@@ -124,7 +178,6 @@ class Visual:
         :param y_col: Column name for the Y-axis.
         :param size_col: Column name for the bubble size.
         :param color_col: Column name for the bubble color.
-        :param title: Title of the bubble chart.
         """
         fig = px.scatter(
             self.df,
@@ -133,15 +186,20 @@ class Visual:
             size=size_col,  # Bubble size represents the size column
             color=color_col, # Bubble color represents the color column
             hover_name=self.df.index, # Hover over the points
-            title="Bubble Chart of GHI vs Tamb vs WS",
+            title="Bubble Chart",
             labels={x_col: x_col, y_col: y_col, size_col: size_col, color_col: color_col}
         )
 
         # Show the plot
         fig.show()
+
     def analyze_temperature_rh_solar(self, temp_col, rh_col, solar_cols):
         """
         Analyze the relationship between temperature, relative humidity, and solar radiation.
+        
+        :param temp_col: Column name for temperature.
+        :param rh_col: Column name for relative humidity.
+        :param solar_cols: List of column names for solar radiation.
         """
         # 1. Create a scatter plot of temperature vs. relative humidity
         fig = px.scatter(self.df, x=temp_col, y=rh_col, 
